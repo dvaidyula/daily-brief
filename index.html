@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#24425a">
+<title>My Daily Brief</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* Themes — soft contrast, no pure black/white */
+  :root, [data-theme="paper"]{
+    --bg:#f5f1e8; --card:#fffdf8; --ink:#2a2723; --muted:#6b655c; --line:#e6dfd2;
+    --accent:#24425a; --accent-ink:#ffffff; --accent-soft:#e6edf2; --hl:#fff1c9; --hl-ink:#6a4a00; --warn:#a33a00;
+  }
+  [data-theme="light"]{
+    --bg:#f3f5f7; --card:#ffffff; --ink:#22262b; --muted:#5d656e; --line:#e1e5ea;
+    --accent:#1f4f7a; --accent-ink:#ffffff; --accent-soft:#e5eef6; --hl:#fff1c9; --hl-ink:#6a4a00; --warn:#a33a00;
+  }
+  [data-theme="dark"]{
+    --bg:#16181b; --card:#1e2125; --ink:#e4e2dd; --muted:#a3a7ad; --line:#2d3237;
+    --accent:#8fbfe0; --accent-ink:#0e1a24; --accent-soft:#223140; --hl:#3a3020; --hl-ink:#f3d58a; --warn:#ffb27a;
+  }
+  :root{ --fs:18px; }
+  *{box-sizing:border-box}
+  html{font-size:var(--fs)}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+    line-height:1.5;-webkit-text-size-adjust:100%}
+  .wrap{max-width:720px;margin:0 auto}
+  header{background:#24425a;color:#fff;padding:12px 14px}
+  .hrow{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  h1{font-size:1.2rem;margin:0;letter-spacing:.2px}
+  .date{font-size:.85rem;opacity:.85}
+  .tools{display:flex;gap:6px}
+  .btn{background:rgba(255,255,255,.14);color:#fff;border:1px solid rgba(255,255,255,.3);
+    border-radius:10px;padding:6px 12px;font:inherit;font-size:.95rem;cursor:pointer;min-height:42px;min-width:42px}
+  nav{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:1px solid var(--line)}
+  .chips{display:flex;gap:6px;overflow-x:auto;padding:8px 12px;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:0 0 auto;background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:999px;
+    padding:6px 12px;font:inherit;font-size:.82rem;text-decoration:none;min-height:36px;display:inline-flex;align-items:center;cursor:pointer}
+  .chip.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+  main{padding:4px 12px 40px}
+  section{margin:16px 0;scroll-margin-top:60px}
+  .sh{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;padding:4px 2px;margin-bottom:6px}
+  .sh h2{font-size:1.02rem;margin:0;flex:1}
+  .sh .cnt{color:var(--muted);font-size:.78rem}
+  .sh .chev{color:var(--muted);transition:transform .2s;font-size:.8rem}
+  section.collapsed .chev{transform:rotate(-90deg)}
+  section.collapsed .body{display:none}
+  .sub{color:var(--muted);font-size:.75rem;margin:-4px 2px 8px}
+  ol.news{list-style:none;margin:0;padding:0;background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  ol.news li{padding:10px 14px;border-top:1px solid var(--line);display:flex;gap:10px}
+  ol.news li:first-child{border-top:0}
+  ol.news li.rel{background:linear-gradient(90deg,var(--hl) 0,var(--hl) 4px,transparent 4px)}
+  .num{flex:0 0 auto;color:var(--muted);font-weight:700;font-size:.78rem;min-width:1.2em;margin-top:2px;text-align:right}
+  .item{min-width:0}
+  .item a{color:var(--ink);text-decoration:none;font-weight:700;font-size:.95rem;line-height:1.4}
+  .item a:visited{color:var(--muted)}
+  .meta{color:var(--muted);font-size:.74rem;margin-top:3px}
+  .tag{display:inline-block;background:var(--accent-soft);color:var(--accent);border-radius:5px;padding:0 5px;margin-right:5px;font-weight:700}
+  .tag.you{background:var(--hl);color:var(--hl-ink)}
+  .desc{color:var(--muted);font-size:.85rem;margin-top:3px;line-height:1.45;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  body.nosum .desc{display:none}
+  .empty,.loading{background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:14px;color:var(--muted);font-size:.9rem}
+  .wx{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+  .wx-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+  .wx-icon{font-size:2.3rem;line-height:1}
+  .wx-temp{font-size:1.9rem;font-weight:700;line-height:1}
+  .wx-place{font-weight:700;font-size:.9rem}
+  .wx-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:6px;margin-top:10px}
+  .wx-cell{background:var(--accent-soft);border-radius:8px;padding:6px 9px;font-size:.78rem}
+  .wx-cell b{display:block;font-size:.92rem}
+  .days{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px}
+  .day{border:1px solid var(--line);border-radius:8px;padding:6px;text-align:center;font-size:.8rem}
+  .day .e{font-size:1.3rem}
+  .city{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+  .city input{flex:1 1 170px;font:inherit;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-height:42px}
+  .pbtn{font:inherit;padding:8px 14px;border-radius:10px;border:0;background:var(--accent);color:var(--accent-ink);min-height:42px;cursor:pointer}
+  .gbtn{font:inherit;padding:8px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--ink);min-height:42px;cursor:pointer}
+  .results button{display:block;width:100%;text-align:left;margin-top:6px}
+  .wx-sub{font-size:.88rem;margin:6px 2px 6px;color:var(--muted);font-weight:700}
+  .status{color:var(--muted);font-size:.8rem;text-align:center;margin-top:6px}
+  .aqi-bad{color:var(--warn)}
+  .banner{margin:10px 12px 0;background:#fff4e5;color:#5a2a00;border:1px solid #f0c48a;border-radius:12px;padding:10px 12px;font-size:.88rem}
+  .diag{padding:0 12px;font-size:.75rem;color:var(--muted)}
+  .diag summary{cursor:pointer;text-align:center}
+  .diag ul{padding-left:18px} .diag li{margin:6px 0;word-break:break-all}
+  footer{color:var(--muted);font-size:.75rem;text-align:center;padding:16px 12px 40px}
+  /* Settings sheet */
+  .sheet-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:20;display:none}
+  .sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--card);color:var(--ink);border-radius:18px 18px 0 0;
+    max-height:88vh;overflow:auto;padding:14px 16px 24px;display:none;max-width:720px;margin:0 auto;box-shadow:0 -6px 24px rgba(0,0,0,.2)}
+  .open .sheet-bg,.open .sheet{display:block}
+  .sheet h3{margin:0;font-size:1.1rem}
+  .sheet h4{margin:16px 0 6px;font-size:.85rem;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .srow{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line);font-size:.95rem}
+  .srow:first-of-type{border-top:0}
+  .step{display:flex;align-items:center;gap:6px}
+  .step button{width:38px;height:38px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:1.1rem;cursor:pointer}
+  .step output{min-width:2em;text-align:center;font-weight:700}
+  .seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  .seg button{border:0;background:var(--bg);color:var(--ink);font:inherit;font-size:.85rem;padding:8px 12px;cursor:pointer;min-height:38px}
+  .seg button.on{background:var(--accent);color:var(--accent-ink)}
+  .switch{width:50px;height:30px;border-radius:999px;border:1px solid var(--line);background:var(--bg);position:relative;cursor:pointer}
+  .switch::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--muted);transition:.2s}
+  .switch.on{background:var(--accent);border-color:var(--accent)}
+  .switch.on::after{left:23px;background:var(--accent-ink)}
+  .sheet-actions{display:flex;gap:8px;justify-content:space-between;margin-top:16px}
+  textarea{width:100%;font:inherit;font-size:.85rem;padding:8px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);min-height:70px}
+  .hint{color:var(--muted);font-size:.78rem;margin:4px 0 0}
+</style>
+</head>
+<body>
+<header>
+  <div class="hrow wrap">
+    <div>
+      <h1>My Daily Brief</h1>
+      <div class="date" id="today"></div>
+    </div>
+    <div class="tools">
+      <button class="btn" id="installBtn" hidden>Install</button>
+      <button class="btn" id="refresh" aria-label="Refresh">↻</button>
+      <button class="btn" id="openSettings" aria-label="Settings">⚙︎</button>
+    </div>
+  </div>
+</header>
+<nav><div class="chips wrap" id="chips"></div></nav>
+<div class="wrap"><div id="banner" class="banner" hidden></div></div>
+<main id="main" class="wrap"></main>
+<div class="wrap">
+  <div class="status" id="status"></div>
+  <div id="diag" class="diag"></div>
+</div>
+<footer class="wrap">
+  Headlines come straight from each publisher's public RSS feed. Only today's stories are shown (last 24 hours if a section is quiet). Weather: Open-Meteo.
+</footer>
+
+<!-- Settings -->
+<div id="settingsRoot">
+  <div class="sheet-bg" id="sheetBg"></div>
+  <div class="sheet" role="dialog" aria-label="Settings">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <h3>Settings</h3><button class="gbtn" id="closeSettings">Done</button>
+    </div>
+
+    <h4>Headlines per section</h4>
+    <div id="countRows"></div>
+
+    <h4>Reading</h4>
+    <div class="srow"><span>Theme</span>
+      <div class="seg" id="themeSeg">
+        <button data-v="paper">Paper</button><button data-v="light">Light</button><button data-v="dark">Dark</button><button data-v="auto">Auto</button>
+      </div></div>
+    <div class="srow"><span>Text size</span>
+      <div class="step"><button id="fsDown">−</button><output id="fsOut"></output><button id="fsUp">+</button></div></div>
+    <div class="srow"><span>Show short summaries</span><button class="switch" id="sumSwitch" aria-label="Show summaries"></button></div>
+
+    <h4>My job keywords</h4>
+    <p class="hint">Stories matching these go to the top and get a ★ For you tag. Separate with commas.</p>
+    <textarea id="kwBox"></textarea>
+
+    <div class="sheet-actions">
+      <button class="gbtn" id="resetSettings">Reset to defaults</button>
+      <button class="pbtn" id="saveSettings">Save</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= CONFIG ================= */
+const SECTIONS = [
+  { id:"tech", title:"Tech & QA", icon:"💻", sub:"Testing, quality, DevOps, security & AI — InfoQ · DevOps.com · Ars Technica · The Register · TechCrunch · The Hindu", feeds:[
+      ["InfoQ","https://feed.infoq.com/"],
+      ["DevOps.com","https://devops.com/feed/"],
+      ["Ars Technica","https://feeds.arstechnica.com/arstechnica/technology-lab"],
+      ["The Register","https://www.theregister.com/headlines.atom"],
+      ["TechCrunch","https://techcrunch.com/feed/"],
+      ["The Hindu","https://www.thehindu.com/sci-tech/technology/feeder/default.rss"] ]},
+  { id:"top", title:"Top Headlines", icon:"⭐", sub:"The biggest stories from every section" },
+  { id:"india", title:"India", icon:"🇮🇳", sub:"The Hindu · Indian Express · Hindustan Times", feeds:[
+      ["The Hindu","https://www.thehindu.com/news/national/feeder/default.rss"],
+      ["Indian Express","https://indianexpress.com/section/india/feed/"],
+      ["Hindustan Times","https://www.hindustantimes.com/feeds/rss/india-news/rssfeed.xml"] ]},
+  { id:"world", title:"World", icon:"🌍", sub:"BBC · DW · France 24", feeds:[
+      ["BBC","https://feeds.bbci.co.uk/news/world/rss.xml"],
+      ["DW","https://rss.dw.com/rdf/rss-en-world"],
+      ["France 24","https://www.france24.com/en/rss"] ]},
+  { id:"sports", title:"Sports", icon:"🏏", sub:"The Hindu · ESPNcricinfo · BBC Sport", feeds:[
+      ["The Hindu","https://www.thehindu.com/sport/feeder/default.rss"],
+      ["ESPNcricinfo","https://www.espncricinfo.com/rss/content/story/feeds/0.xml"],
+      ["BBC Sport","https://feeds.bbci.co.uk/sport/rss.xml"] ]},
+  { id:"parenting", title:"Parenting & School", icon:"👨‍👧", sub:"Parenting, child health & education — Indian Express · The Hindu · BBC", feeds:[
+      ["Indian Express","https://indianexpress.com/section/parenting/feed/"],
+      ["The Hindu","https://www.thehindu.com/education/feeder/default.rss"],
+      ["Indian Express","https://indianexpress.com/section/education/feed/"],
+      ["BBC","https://feeds.bbci.co.uk/news/education/rss.xml"] ]},
+  { id:"lifestyle", title:"Lifestyle", icon:"🌿", sub:"Health, food, travel & culture — The Hindu · Indian Express · Hindustan Times", feeds:[
+      ["The Hindu","https://www.thehindu.com/life-and-style/feeder/default.rss"],
+      ["Indian Express","https://indianexpress.com/section/lifestyle/feed/"],
+      ["Hindustan Times","https://www.hindustantimes.com/feeds/rss/lifestyle/rssfeed.xml"] ]},
+  { id:"weather", title:"Weather", icon:"🌦️", sub:"Local forecast, plus weather & climate news", feeds:[
+      ["The Hindu","https://www.thehindu.com/sci-tech/energy-and-environment/feeder/default.rss"],
+      ["BBC","https://feeds.bbci.co.uk/news/science_and_environment/rss.xml"] ]},
+];
+const MAX_PER_SECTION = 25;
+const DEFAULT_KW = "testing, test automation, QA, quality engineering, quality assurance, bug, bugs, outage, incident, regression, CI/CD, DevOps, SRE, reliability, observability, performance, load testing, Playwright, Selenium, Cypress, Appium, API, microservices, Kubernetes, release, deployment, vulnerability, security, CVE, breach, patch, AI, LLM, GenAI, agent, copilot, open source, GitHub, software engineering, developer";
+const DEFAULTS = { counts:Object.fromEntries(SECTIONS.map(s=>[s.id,10])), theme:"paper", fs:18, summaries:false, keywords:DEFAULT_KW, collapsed:{} };
+const WEATHER_WORDS = /\b(weather|rain|rainfall|monsoon|cyclone|storm|thunderstorm|heatwave|heat wave|cold wave|cold-wave|fog|smog|snow|snowfall|flood|floods|imd|temperature|winter|hailstorm|downpour|drought|aqi|air quality|pollution|climate|el ni[nñ]o|la ni[nñ]a|typhoon|hurricane|tornado|landslide)\b/i;
+
+/* ================= Settings store ================= */
+let S = loadSettings();
+function loadSettings(){
+  let s={}; try{ s=JSON.parse(localStorage.getItem("dailybrief-settings")||"{}"); }catch(e){}
+  return {...DEFAULTS, ...s, counts:{...DEFAULTS.counts, ...(s.counts||{})}, collapsed:{...(s.collapsed||{})}};
+}
+function saveSettings(){ try{ localStorage.setItem("dailybrief-settings", JSON.stringify(S)); }catch(e){} }
+let KW_RE = null;
+function buildKw(){
+  const words = S.keywords.split(",").map(w=>w.trim()).filter(Boolean)
+    .map(w=>w.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"));
+  KW_RE = words.length ? new RegExp("(^|[^a-z0-9])("+words.join("|")+")(?=$|[^a-z0-9])","gi") : null;
+}
+function relevance(i){
+  if(!KW_RE) return 0;
+  const t=(i.title||""), d=(i.desc||"");
+  const tm=(t.match(KW_RE)||[]).length, dm=(d.match(KW_RE)||[]).length;
+  return tm*3 + Math.min(dm,3);
+}
+
+/* ================= Network ================= */
+const enc = encodeURIComponent;
+const PROXIES = [
+  { name:"rss2json",   kind:"r2j",  url:u=>`https://api.rss2json.com/v1/api.json?rss_url=${enc(u)}` },
+  { name:"allorigins", kind:"raw",  url:u=>`https://api.allorigins.win/raw?url=${enc(u)}` },
+  { name:"allorigins-json", kind:"aoj", url:u=>`https://api.allorigins.win/get?url=${enc(u)}` },
+  { name:"codetabs",   kind:"raw",  url:u=>`https://api.codetabs.com/v1/proxy?quest=${enc(u)}` },
+  { name:"corsproxy",  kind:"raw",  url:u=>`https://corsproxy.io/?url=${enc(u)}` },
+];
+function withTimeout(url, ms, opts={}){
+  const c = new AbortController(); const t = setTimeout(()=>c.abort(), ms);
+  return fetch(url, {...opts, signal:c.signal, cache:"no-store"}).finally(()=>clearTimeout(t));
+}
+function limiter(n){ let active=0; const q=[];
+  const next=()=>{ if(active>=n||!q.length) return; active++; const [fn,res,rej]=q.shift();
+    fn().then(res,rej).finally(()=>{active--; next();}); };
+  return fn=>new Promise((res,rej)=>{ q.push([fn,res,rej]); next(); }); }
+const pool = limiter(5);
+const FEED_STATUS = [];
+let feedCounter = 0;
+function r2jDate(s){ if(!s) return null; const m=/^\d{4}-\d\d-\d\d \d\d:\d\d:\d\d$/.test(s.trim());
+  return parseDate(m ? s.trim().replace(" ","T")+"Z" : s); }
+async function tryProxy(p, url){
+  const r = await withTimeout(p.url(url), 8000);
+  if(!r.ok) throw new Error("HTTP "+r.status);
+  if(p.kind==="r2j"){
+    const j = await r.json(); if(j.status!=="ok") throw new Error(j.message||"rss2json error");
+    return j.items.map(i=>({title:clean(i.title), link:i.link, date:r2jDate(i.pubDate), desc:clean(i.description)})).filter(i=>i.title&&i.link);
+  }
+  const txt = p.kind==="aoj" ? ((await r.json()).contents||"") : await r.text();
+  if(!/<(rss|feed|rdf:RDF|channel)/i.test(txt)) throw new Error("not a feed");
+  return parseXML(txt);
+}
+async function fetchFeed(url, src){
+  const start = (feedCounter++) % PROXIES.length;
+  const order = PROXIES.map((_,i)=>PROXIES[(start+i)%PROXIES.length]);
+  const errs=[];
+  for(const p of order){
+    try{
+      const items = await pool(()=>tryProxy(p,url));
+      if(items.length){ FEED_STATUS.push({src,url,ok:true,via:p.name,n:items.length}); return items; }
+      errs.push(p.name+": empty");
+    }catch(e){ errs.push(p.name+": "+(e.name==="AbortError"?"timeout":e.message)); }
+  }
+  FEED_STATUS.push({src,url,ok:false,err:errs.join(" | ")});
+  return [];
+}
+function parseXML(txt){
+  const doc = new DOMParser().parseFromString(txt, "text/xml");
+  if(doc.querySelector("parsererror")) return [];
+  const nodes = [...doc.getElementsByTagName("item"), ...doc.getElementsByTagName("entry")];
+  return nodes.map(n=>{
+    const g = tag => { const el = n.getElementsByTagName(tag)[0]; return el ? el.textContent : ""; };
+    let link = g("link");
+    if(!link || !/^https?:/.test(link.trim())){
+      const alt=[...n.getElementsByTagName("link")].find(l=>l.getAttribute("href"));
+      if(alt) link=alt.getAttribute("href");
+    }
+    const date = g("pubDate") || g("dc:date") || g("updated") || g("published");
+    return { title:clean(g("title")), link:(link||"").trim(), date:parseDate(date), desc:clean(g("description")||g("summary")) };
+  }).filter(i=>i.title && i.link);
+}
+function clean(s){
+  if(!s) return "";
+  const d = document.createElement("div"); d.innerHTML = s.replace(/<!\[CDATA\[|\]\]>/g,"");
+  return (d.textContent||"").replace(/\s+/g," ").trim();
+}
+function parseDate(s){ if(!s) return null; const d = new Date(s.trim()); return isNaN(d) ? null : d; }
+
+/* ================= Day filter, dedupe, ranking ================= */
+function startOfToday(){ const d=new Date(); d.setHours(0,0,0,0); return d; }
+function norm(t){ return t.toLowerCase().replace(/[^a-z0-9 ]/g,"").replace(/\s+/g," ").trim().slice(0,70); }
+function dedupe(items){ const seen=new Set(); return items.filter(i=>{ const k=norm(i.title); if(seen.has(k)) return false; seen.add(k); return true; }); }
+function interleave(lists){ const out=[]; const max=Math.max(0,...lists.map(l=>l.length));
+  for(let i=0;i<max;i++) for(const l of lists) if(l[i]) out.push(l[i]); return out; }
+function todaysOnly(items){
+  const now=Date.now(), sod=startOfToday().getTime(), day=24*3600e3;
+  const sorted = items.slice().sort((a,b)=>(b.date||0)-(a.date||0));
+  let today = sorted.filter(i=>i.date && i.date.getTime()>=sod && i.date.getTime()<=now+3600e3);
+  if(today.length<5) today = sorted.filter(i=>i.date && now-i.date.getTime()<=day);
+  if(today.length<3) today = sorted.filter(i=>!i.date || now-i.date.getTime()<=day);
+  return today;
+}
+function pickSection(perFeed){
+  const lists = perFeed.map(([src,items])=> todaysOnly(items).map(i=>({...i,src})));
+  return dedupe(interleave(lists)).slice(0,MAX_PER_SECTION);
+}
+// Job-relevant first (stable: keeps freshness/variety order among equals)
+function rankForMe(items){
+  return items.map((i,idx)=>({i,idx,r:relevance(i)}))
+    .sort((a,b)=> (b.r>0)-(a.r>0) || b.r-a.r || a.idx-b.idx).map(x=>({...x.i, rel:x.r>0}));
+}
+
+/* ================= Rendering ================= */
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+function ago(d){
+  if(!d) return ""; const m=Math.round((Date.now()-d.getTime())/60000);
+  if(m<1) return "just now"; if(m<60) return m+"m ago";
+  const h=Math.round(m/60); if(h<24) return h+"h ago";
+  return d.toLocaleDateString(undefined,{day:"numeric",month:"short"});
+}
+function listHTML(items, showTag){
+  if(!items.length) return `<div class="empty">No fresh stories found right now. Tap ↻ to try again.</div>`;
+  return `<ol class="news">${items.map((i,n)=>`
+    <li class="${i.rel?"rel":""}"><span class="num">${n+1}</span><div class="item">
+      <a href="${esc(i.link)}" target="_blank" rel="noopener">${esc(i.title)}</a>
+      ${i.desc && i.desc!==i.title ? `<div class="desc">${esc(i.desc.slice(0,220))}</div>`:""}
+      <div class="meta">${i.rel?`<span class="tag you">★ For you</span>`:""}${showTag&&i.sec?`<span class="tag">${esc(i.sec)}</span>`:""}${esc(i.src||"")}${i.date?" · "+ago(i.date):""}</div>
+    </div></li>`).join("")}</ol>`;
+}
+function shortTitle(s){ return s.title.split(" &")[0].replace("Top Headlines","Top"); }
+function buildShell(){
+  $("#today").textContent = new Date().toLocaleDateString(undefined,{weekday:"long",day:"numeric",month:"long"});
+  $("#chips").innerHTML = SECTIONS.map(s=>`<a class="chip" href="#${s.id}" data-id="${s.id}">${s.icon} ${shortTitle(s)}</a>`).join("");
+  $("#main").innerHTML = SECTIONS.map(s=>`
+    <section id="${s.id}" class="${S.collapsed[s.id]?"collapsed":""}">
+      <div class="sh" data-toggle="${s.id}"><h2>${s.icon} ${esc(s.title)}</h2><span class="cnt" id="cnt-${s.id}"></span><span class="chev">▼</span></div>
+      <div class="body">
+        <p class="sub">${esc(s.sub)}</p>
+        ${s.id==="weather"?`<div id="wx-local" class="wx"><div class="loading">Loading local weather…</div></div><div class="wx-sub">Weather & climate headlines</div>`:""}
+        <div id="list-${s.id}"><div class="loading">Fetching latest headlines…</div></div>
+      </div>
+    </section>`).join("");
+  document.querySelectorAll("[data-toggle]").forEach(h=>h.onclick=()=>{
+    const id=h.dataset.toggle; const sec=document.getElementById(id);
+    sec.classList.toggle("collapsed"); S.collapsed[id]=sec.classList.contains("collapsed"); saveSettings();
+  });
+  document.querySelectorAll(".chip").forEach(c=>c.addEventListener("click",()=>{
+    const sec=document.getElementById(c.dataset.id); if(sec.classList.contains("collapsed")){ sec.classList.remove("collapsed"); S.collapsed[c.dataset.id]=false; saveSettings(); }
+  }));
+  const io = new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting){
+    document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("active", c.dataset.id===e.target.id));
+    const a=document.querySelector(`.chip[data-id="${e.target.id}"]`); if(a) a.scrollIntoView({inline:"center",block:"nearest",behavior:"smooth"});
+  }}); },{rootMargin:"-40% 0px -55% 0px"});
+  document.querySelectorAll("section").forEach(s=>io.observe(s));
+}
+
+let RESULT = {};
+function renderSection(id){
+  const s=SECTIONS.find(x=>x.id===id); const n=S.counts[id]||10;
+  let items;
+  if(id==="top"){
+    const ranked = SECTIONS.filter(x=>x.id!=="top").map(x=>rankForMe(RESULT[x.id]||[]).slice(0,4).map(i=>({...i,sec:shortTitle(x)})));
+    const pool2 = dedupe(interleave(ranked));
+    // Job-relevant stories lead, then the round-robin mix across sections
+    items = [...pool2.filter(i=>i.rel).slice(0,Math.ceil(n/3)), ...pool2.filter(i=>!i.rel)];
+    items = dedupe(items).slice(0,n);
+  } else if(id==="tech"){
+    items = rankForMe(RESULT.tech||[]).slice(0,n);
+  } else {
+    items = (RESULT[id]||[]).slice(0,n).map(i=>({...i,rel:false}));
+  }
+  const el=$("#list-"+id); if(el) el.innerHTML = listHTML(items, id==="top");
+  const c=$("#cnt-"+id); if(c) c.textContent = items.length ? items.length+" stories" : "";
+}
+function renderAll(){ SECTIONS.forEach(s=>{ if(s.id!=="top" && !RESULT[s.id]) return; renderSection(s.id); }); }
+
+/* ================= Cache (today only) ================= */
+const CKEY="dailybrief-"+new Date().toDateString();
+function loadCache(){ try{ return JSON.parse(localStorage.getItem(CKEY)||"null"); }catch(e){ return null; } }
+function saveCache(data){ try{
+  Object.keys(localStorage).filter(k=>/^dailybrief-(Mon|Tue|Wed|Thu|Fri|Sat|Sun) /.test(k)&&k!==CKEY).forEach(k=>localStorage.removeItem(k));
+  localStorage.setItem(CKEY, JSON.stringify(data)); }catch(e){} }
+function revive(items){ return (items||[]).map(i=>({...i,date:i.date?new Date(i.date):null})); }
+
+/* ================= Load news ================= */
+let loading=false;
+async function loadNews(){
+  if(loading) return; loading=true;
+  FEED_STATUS.length=0; $("#banner").hidden=true;
+  $("#status").textContent="Fetching the latest headlines…";
+  const allFetched=[]; const fresh={};
+  await Promise.all(SECTIONS.filter(s=>s.feeds).map(async s=>{
+    const perFeed = await Promise.all(s.feeds.map(async ([src,url])=>{
+      const items = await fetchFeed(url, src); allFetched.push(...items.map(i=>({...i,src}))); return [src,items];
+    }));
+    fresh[s.id] = pickSection(perFeed);
+    if(s.id!=="weather" && fresh[s.id].length){ RESULT[s.id]=fresh[s.id]; renderSection(s.id); renderSection("top"); }
+  }));
+  const wxMatches = todaysOnly(allFetched.filter(i=>WEATHER_WORDS.test(i.title)));
+  fresh.weather = dedupe([...wxMatches, ...(fresh.weather||[])]).slice(0,MAX_PER_SECTION);
+  for(const k in fresh) if(fresh[k].length) RESULT[k]=fresh[k];
+  renderAll();
+  SECTIONS.forEach(s=>{ if(s.feeds && !RESULT[s.id]) $("#list-"+s.id).innerHTML=listHTML([]); });
+  const got = Object.values(fresh).reduce((n,l)=>n+l.length,0);
+  if(got) saveCache({t:Date.now(), result:RESULT});
+  const okN = FEED_STATUS.filter(f=>f.ok).length;
+  $("#status").textContent = got ? `Updated ${new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})} · ${okN} of ${FEED_STATUS.length} sources loaded`
+    : "Couldn't reach the news feeds.";
+  renderDiag();
+  if(!okN) await networkCheck();
+  loading=false;
+}
+
+/* ================= Diagnostics ================= */
+function renderDiag(){
+  const ok=FEED_STATUS.filter(f=>f.ok).length;
+  $("#diag").innerHTML = `<details><summary>Source status: ${ok} of ${FEED_STATUS.length} loaded</summary>
+    <ul>${FEED_STATUS.map(f=>`<li>${f.ok?"✅":"❌"} <b>${esc(f.src)}</b> — ${f.ok?`${f.n} items via ${esc(f.via)}`:esc(f.err)}<br><small>${esc(f.url)}</small></li>`).join("")}</ul></details>`;
+}
+async function networkCheck(){
+  let online=false;
+  try{ const r=await withTimeout("https://api.open-meteo.com/v1/forecast?latitude=28.6&longitude=77.2&current=temperature_2m",8000); online=r.ok; }catch(e){}
+  $("#banner").innerHTML = online
+    ? `<b>Your internet works, but the news relays didn't respond.</b> They may be busy. Wait a minute and tap ↻.`
+    : `<b>This page can't reach the internet from where it's open.</b> The Claude app's preview and some file viewers block network access. Download the file and open it in <b>Chrome</b> (Files app → tap the file → Open with Chrome).`;
+  $("#banner").hidden=false;
+}
+
+/* ================= Local weather ================= */
+const WMO={0:["Clear sky","☀️"],1:["Mainly clear","🌤️"],2:["Partly cloudy","⛅"],3:["Overcast","☁️"],45:["Fog","🌫️"],48:["Freezing fog","🌫️"],
+  51:["Light drizzle","🌦️"],53:["Drizzle","🌦️"],55:["Heavy drizzle","🌧️"],61:["Light rain","🌦️"],63:["Rain","🌧️"],65:["Heavy rain","🌧️"],
+  66:["Freezing rain","🌧️"],67:["Freezing rain","🌧️"],71:["Light snow","🌨️"],73:["Snow","🌨️"],75:["Heavy snow","❄️"],77:["Snow grains","🌨️"],
+  80:["Rain showers","🌦️"],81:["Rain showers","🌧️"],82:["Violent showers","⛈️"],85:["Snow showers","🌨️"],86:["Snow showers","❄️"],
+  95:["Thunderstorm","⛈️"],96:["Thunderstorm, hail","⛈️"],99:["Severe thunderstorm","⛈️"]};
+const wmo = c => WMO[c]||["—","🌡️"];
+function getPlace(){ try{ return JSON.parse(localStorage.getItem("dailybrief-place")||"null"); }catch(e){ return null; } }
+function setPlace(p){ try{ localStorage.setItem("dailybrief-place", JSON.stringify(p)); }catch(e){} }
+function aqiLabel(v){ if(v==null) return ["—",""]; if(v<=50) return ["Good",""]; if(v<=100) return ["Moderate",""];
+  if(v<=150) return ["Unhealthy (sensitive)","aqi-bad"]; if(v<=200) return ["Unhealthy","aqi-bad"]; if(v<=300) return ["Very unhealthy","aqi-bad"]; return ["Hazardous","aqi-bad"]; }
+function cityForm(msg){
+  return `${msg?`<p style="margin:0;font-size:.9rem">${msg}</p>`:""}
+  <form class="city" id="cityForm"><input id="cityInput" placeholder="Your city, e.g. Bengaluru" autocomplete="off" required>
+  <button class="pbtn" type="submit">Search</button><button class="gbtn" type="button" id="geoBtn">📍 Locate me</button></form>
+  <div class="results" id="cityResults"></div>`;
+}
+function wireCityForm(){
+  const f=$("#cityForm"); if(!f) return;
+  f.addEventListener("submit", async e=>{
+    e.preventDefault(); const q=$("#cityInput").value.trim(); if(!q) return;
+    $("#cityResults").innerHTML="Searching…";
+    try{
+      const r=await withTimeout(`https://geocoding-api.open-meteo.com/v1/search?name=${enc(q)}&count=6&language=en&format=json`,10000);
+      const res=(await r.json()).results||[];
+      if(!res.length){ $("#cityResults").innerHTML="No match. Try another spelling."; return; }
+      $("#cityResults").innerHTML=res.map((p,i)=>`<button class="gbtn" type="button" data-i="${i}">${esc(p.name)}${p.admin1?", "+esc(p.admin1):""}, ${esc(p.country||"")}</button>`).join("");
+      $("#cityResults").querySelectorAll("button").forEach(b=>b.onclick=()=>{ const p=res[+b.dataset.i];
+        setPlace({name:p.name+(p.admin1?", "+p.admin1:""), lat:p.latitude, lon:p.longitude}); loadWeather(); });
+    }catch(err){ $("#cityResults").innerHTML="Couldn't search right now."; }
+  });
+  $("#geoBtn").onclick=()=>{
+    if(!navigator.geolocation){ $("#cityResults").innerHTML="Location isn't available here — type your city."; return; }
+    $("#cityResults").innerHTML="Getting your location…";
+    navigator.geolocation.getCurrentPosition(pos=>{ setPlace({name:"Your location", lat:pos.coords.latitude, lon:pos.coords.longitude}); loadWeather(); },
+      ()=>{ $("#cityResults").innerHTML="Location permission was refused — type your city."; },{timeout:10000});
+  };
+}
+async function loadWeather(){
+  const box=$("#wx-local"); const p=getPlace();
+  if(!p){ box.innerHTML=cityForm("Set your city once to see local weather every day."); wireCityForm(); return; }
+  box.innerHTML=`<div class="loading">Loading weather for ${esc(p.name)}…</div>`;
+  try{
+    const [w,a]=await Promise.all([
+      withTimeout(`https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,sunrise,sunset,uv_index_max&timezone=auto&forecast_days=4`,10000).then(r=>r.json()),
+      withTimeout(`https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${p.lat}&longitude=${p.lon}&current=us_aqi,pm2_5&timezone=auto`,10000).then(r=>r.json()).catch(()=>null)
+    ]);
+    const c=w.current, d=w.daily; const [txt,ico]=wmo(c.weather_code);
+    const aqi=a&&a.current?a.current.us_aqi:null; const [al,acls]=aqiLabel(aqi);
+    const t=s=>s?s.split("T")[1]:"—";
+    box.innerHTML=`
+      <div class="wx-top"><div class="wx-icon">${ico}</div>
+        <div><div class="wx-temp">${Math.round(c.temperature_2m)}°C</div><div style="font-size:.88rem">${txt} · feels ${Math.round(c.apparent_temperature)}°</div></div>
+        <div style="margin-left:auto;text-align:right"><div class="wx-place">${esc(p.name)}</div>
+          <button class="chip" id="changeCity" style="margin-top:4px">Change city</button></div></div>
+      <div class="wx-grid">
+        <div class="wx-cell">High / Low<b>${Math.round(d.temperature_2m_max[0])}° / ${Math.round(d.temperature_2m_min[0])}°</b></div>
+        <div class="wx-cell">Rain chance<b>${d.precipitation_probability_max[0]??"—"}%</b></div>
+        <div class="wx-cell">Air quality (US AQI)<b class="${acls}">${aqi??"—"} · ${al}</b></div>
+        <div class="wx-cell">Humidity · Wind<b>${c.relative_humidity_2m}% · ${Math.round(c.wind_speed_10m)} km/h</b></div>
+        <div class="wx-cell">UV max<b>${d.uv_index_max[0]??"—"}</b></div>
+        <div class="wx-cell">Sun<b>${t(d.sunrise[0])} – ${t(d.sunset[0])}</b></div>
+      </div>
+      <div class="days">${[1,2,3].map(i=>{const [,ic]=wmo(d.weather_code[i]);
+        return `<div class="day"><div>${new Date(d.time[i]).toLocaleDateString(undefined,{weekday:"short"})}</div><div class="e">${ic}</div>
+        <div><b>${Math.round(d.temperature_2m_max[i])}°</b>/${Math.round(d.temperature_2m_min[i])}° · ${d.precipitation_probability_max[i]??0}%</div></div>`}).join("")}</div>`;
+    $("#changeCity").onclick=()=>{ box.innerHTML=cityForm(); wireCityForm(); };
+  }catch(e){ box.innerHTML=`<div class="empty">Couldn't load weather right now. Tap ↻ to retry.</div>`; }
+}
+
+/* ================= Appearance ================= */
+const mq = window.matchMedia("(prefers-color-scheme: dark)");
+function applyAppearance(){
+  const th = S.theme==="auto" ? (mq.matches?"dark":"paper") : S.theme;
+  document.documentElement.setAttribute("data-theme", th);
+  document.documentElement.style.setProperty("--fs", S.fs+"px");
+  document.body.classList.toggle("nosum", !S.summaries);
+}
+mq.addEventListener && mq.addEventListener("change", applyAppearance);
+
+/* ================= Settings sheet ================= */
+let draft=null;
+function openSettings(){
+  draft = JSON.parse(JSON.stringify(S));
+  $("#countRows").innerHTML = SECTIONS.map(s=>`
+    <div class="srow"><span>${s.icon} ${esc(s.title)}</span>
+      <div class="step"><button data-dec="${s.id}" aria-label="Fewer">−</button><output id="out-${s.id}">${draft.counts[s.id]}</output><button data-inc="${s.id}" aria-label="More">+</button></div></div>`).join("");
+  $("#countRows").querySelectorAll("button").forEach(b=>b.onclick=()=>{
+    const id=b.dataset.dec||b.dataset.inc; const v=draft.counts[id]+(b.dataset.dec?-1:1);
+    draft.counts[id]=Math.max(1,Math.min(MAX_PER_SECTION,v)); $("#out-"+id).textContent=draft.counts[id];
+  });
+  syncSheet();
+  $("#kwBox").value = draft.keywords;
+  $("#settingsRoot").classList.add("open");
+}
+function syncSheet(){
+  $("#themeSeg").querySelectorAll("button").forEach(b=>b.classList.toggle("on", b.dataset.v===draft.theme));
+  $("#fsOut").textContent = draft.fs;
+  $("#sumSwitch").classList.toggle("on", draft.summaries);
+}
+function closeSettings(){ $("#settingsRoot").classList.remove("open"); }
+$("#themeSeg").querySelectorAll("button").forEach(b=>b.onclick=()=>{ draft.theme=b.dataset.v; syncSheet(); S.theme=draft.theme; applyAppearance(); });
+$("#fsDown").onclick=()=>{ draft.fs=Math.max(14,draft.fs-1); syncSheet(); S.fs=draft.fs; applyAppearance(); };
+$("#fsUp").onclick=()=>{ draft.fs=Math.min(26,draft.fs+1); syncSheet(); S.fs=draft.fs; applyAppearance(); };
+$("#sumSwitch").onclick=()=>{ draft.summaries=!draft.summaries; syncSheet(); S.summaries=draft.summaries; applyAppearance(); };
+$("#saveSettings").onclick=()=>{
+  draft.keywords = $("#kwBox").value.trim() || DEFAULT_KW;
+  S = {...draft, collapsed:S.collapsed}; saveSettings(); buildKw(); applyAppearance(); renderAll(); closeSettings();
+};
+$("#closeSettings").onclick=()=>$("#saveSettings").onclick();
+$("#sheetBg").onclick=()=>$("#saveSettings").onclick();
+$("#resetSettings").onclick=()=>{ draft = JSON.parse(JSON.stringify(DEFAULTS)); openSettingsFromDraft(); };
+function openSettingsFromDraft(){ const d=draft; openSettings(); draft=d;
+  SECTIONS.forEach(s=>$("#out-"+s.id).textContent=draft.counts[s.id]); $("#kwBox").value=draft.keywords; syncSheet();
+  S.theme=draft.theme; S.fs=draft.fs; S.summaries=draft.summaries; applyAppearance(); }
+$("#openSettings").onclick=openSettings;
+$("#refresh").onclick=()=>{ loadNews(); loadWeather(); };
+
+/* ================= Install as app (PWA) ================= */
+let deferredPrompt=null;
+window.addEventListener("beforeinstallprompt", e=>{ e.preventDefault(); deferredPrompt=e; $("#installBtn").hidden=false; });
+$("#installBtn").onclick=async()=>{ if(!deferredPrompt) return; deferredPrompt.prompt(); await deferredPrompt.userChoice; deferredPrompt=null; $("#installBtn").hidden=true; };
+window.addEventListener("appinstalled", ()=>{ $("#installBtn").hidden=true; });
+if("serviceWorker" in navigator && location.protocol==="https:"){ navigator.serviceWorker.register("sw.js").catch(()=>{}); }
+
+/* ================= Boot ================= */
+buildKw(); applyAppearance(); buildShell();
+const cached=loadCache();
+if(cached&&cached.result){
+  for(const k in cached.result) RESULT[k]=revive(cached.result[k]);
+  renderAll();
+  $("#status").textContent="Showing headlines from "+new Date(cached.t).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})+" — refreshing…";
+}
+loadNews(); loadWeather();
+setInterval(()=>{ if(new Date().toDateString()!==CKEY.replace("dailybrief-","")) location.reload(); else loadNews(); }, 30*60*1000);
+</script>
+</body>
+</html>
